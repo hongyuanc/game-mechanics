@@ -15,8 +15,15 @@ var gravity = ProjectSettings.get_setting("physics/2d/default_gravity")
 var remnant_position: Vector2 = Vector2.ZERO
 var remnant_active = false
 var remnant_duration = 5.0  # How long the remnant lasts in seconds
+var remnant_direction = 1
 
 func _ready():
+	animated_sprite_2d.animation_finished.connect(_on_animation_finished)
+	if remnant_scene is PackedScene:
+		print("remnant_scene is a valid PackedScene")
+	else:
+		print("Error: remnant_scene is not a valid PackedScene")
+
 	animated_sprite_2d.animation_finished.connect(_on_animation_finished)
 
 func _physics_process(delta):
@@ -45,8 +52,10 @@ func _physics_process(delta):
 
 	if direction > 0:
 		animated_sprite_2d.flip_h = false
+		remnant_direction = 1
 	elif direction < 0:
 		animated_sprite_2d.flip_h = true
+		remnant_direction = -1
 
 	# Handle attack input
 	if Input.is_action_just_pressed("attack") and not is_attacking:
@@ -61,18 +70,34 @@ func place_remnant():
 	remnant_position = global_position
 	remnant_active = true
 	print("Remnant placed at ", remnant_position)
-	# You might want to create a visual indicator for the remnant here
-	
+	# Create a visual indicator for the remnant
+	if remnant_scene is PackedScene:
+		current_remnant = remnant_scene.instantiate()
+		current_remnant.global_position = remnant_position
+		current_remnant.set_direction(remnant_direction)
+		get_parent().add_child(current_remnant)
+		
+		remnant_position = global_position
+		remnant_active = true
+	else:
+		print("Error: remnant_scene is not a PackedScene")
 
 func flash_to_remnant():
 	if remnant_active:
 		global_position = remnant_position
 		print("Flashed to ", remnant_position)
+		if current_remnant.get_direction() == 1:
+			animated_sprite_2d.flip_h = false
+		else:
+			animated_sprite_2d.flip_h = true
 		remove_remnant()
 		# You might want to add a flash effect here
 
 func remove_remnant():
 	remnant_active = false
+	if current_remnant:
+		current_remnant.queue_free()
+		current_remnant = null
 	print("Remnant removed")
 	# Remove the visual indicator for the remnant here
 

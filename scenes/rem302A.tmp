@@ -55,4 +55,4 @@ position = Vector2(-1, -96)
 scale = Vector2(1.78066, 1.9249)
 sprite_frames = SubResource("SpriteFrames_gyree")
 autoplay = "default"
-frame_progress = 0.410208
+frame_progress = 0.843167
