@@ -10,6 +10,7 @@ const SPEED = 300.0
 const JUMP_VELOCITY = -400.0
 
 var is_attacking = false
+var is_flashing = false
 var gravity = ProjectSettings.get_setting("physics/2d/default_gravity")
 
 var remnant_position: Vector2 = Vector2.ZERO
@@ -35,6 +36,7 @@ func _physics_process(delta):
 	
 	if Input.is_action_just_pressed("flash"):
 		if remnant_active:
+			animated_sprite_2d.play("flash")
 			flash_to_remnant()
 		else:
 			place_remnant()
@@ -60,7 +62,7 @@ func _physics_process(delta):
 	# Handle attack input
 	if Input.is_action_just_pressed("attack") and not is_attacking:
 		start_attack()
-	elif not is_attacking:
+	elif not is_attacking and not is_flashing:
 		update_animation(direction)
 
 	# Apply movement
@@ -91,7 +93,11 @@ func flash_to_remnant():
 		else:
 			animated_sprite_2d.flip_h = true
 		remove_remnant()
-		# You might want to add a flash effect here
+		is_flashing = true
+		animated_sprite_2d.play("flash")
+		# Wait for the flash animation to finish
+		await animated_sprite_2d.animation_finished
+		is_flashing = false
 
 func remove_remnant():
 	remnant_active = false
@@ -102,6 +108,8 @@ func remove_remnant():
 	# Remove the visual indicator for the remnant here
 
 func update_animation(direction):
+	if is_flashing:
+		return
 	if not is_on_floor():
 		animated_sprite_2d.play("jump")
 	elif direction != 0:
